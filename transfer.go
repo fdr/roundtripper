@@ -439,7 +439,7 @@ func fixLength(isResponse bool, status int, requestMethod string, header http.He
 	}
 
 	// Logic based on Content-Length
-	cl := strings.TrimSpace(header.Get("Content-Length"))
+	cl := strings.TrimSpace(get(header, "Content-Length"))
 	if cl != "" {
 		n, err := strconv.ParseInt(cl, 10, 64)
 		if err != nil || n < 0 {
@@ -461,7 +461,7 @@ func fixLength(isResponse bool, status int, requestMethod string, header http.He
 	// Logic based on media type. The purpose of the following code is just
 	// to detect whether the unsupported "multipart/byteranges" is being
 	// used. A proper Content-Type parser is needed in the future.
-	if strings.Contains(strings.ToLower(header.Get("Content-Type")), "multipart/byteranges") {
+	if strings.Contains(strings.ToLower(get(header, "Content-Type")), "multipart/byteranges") {
 		return -1, http.ErrNotSupported
 	}
 
@@ -476,14 +476,14 @@ func shouldClose(major, minor int, header http.Header) bool {
 	if major < 1 {
 		return true
 	} else if major == 1 && minor == 0 {
-		if !strings.Contains(strings.ToLower(header.Get("Connection")), "keep-alive") {
+		if !strings.Contains(strings.ToLower(get(header, "Connection")), "keep-alive") {
 			return true
 		}
 		return false
 	} else {
 		// TODO: Should split on commas, toss surrounding white space,
 		// and check each field.
-		if strings.ToLower(header.Get("Connection")) == "close" {
+		if strings.ToLower(get(header, "Connection")) == "close" {
 			header.Del("Connection")
 			return true
 		}
@@ -493,7 +493,7 @@ func shouldClose(major, minor int, header http.Header) bool {
 
 // Parse the trailer header
 func fixTrailer(header http.Header, te []string) (http.Header, error) {
-	raw := header.Get("Trailer")
+	raw := get(header, "Trailer")
 	if raw == "" {
 		return nil, nil
 	}
